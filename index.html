@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SmartBuild — لوحة التحكم</title>
+<style>
+/* ===== SMARTBUILD ADMIN PANEL ===== */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+:root {
+  --primary:      #2B7BB9;
+  --primary-dark: #1A5C8F;
+  --primary-light:#4A9FD4;
+  --dark:         #1C2331;
+  --dark-med:     #2E3A4E;
+  --mid:          #4A5568;
+  --light:        #EDF2F7;
+  --surface:      #F7FAFC;
+  --white:        #FFFFFF;
+  --dune:         #DCE8F5;
+  --success:      #38A169;
+  --warning:      #D69E2E;
+  --danger:       #E53E3E;
+  --sidebar-w:    240px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Cairo', 'Segoe UI', sans-serif; background: var(--surface); color: var(--dark); direction: rtl; overflow-x: hidden; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed; right: 0; top: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--dark);
+  display: flex; flex-direction: column;
+  z-index: 100; overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-light), var(--primary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.sidebar-logo-text { font-size: 1.1rem; font-weight: 900; }
+.sidebar-logo-text span:first-child { color: white; }
+.sidebar-logo-text span:last-child  { color: var(--primary-light); }
+.sidebar-logo-sub { font-size: 0.7rem; color: rgba(255,255,255,0.3); margin-top: 1px; }
+.sidebar-section { padding: 16px 12px 6px; font-size: 0.65rem; font-weight: 700; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 1px; }
+.sidebar-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 20px; font-size: 0.875rem; font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer; transition: all 0.2s;
+  text-decoration: none; border: none; background: none; width: 100%;
+  border-right: 3px solid transparent; position: relative; font-family: inherit;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.06); color: white; }
+.sidebar-item.active { background: rgba(43,123,185,0.2); color: white; border-right-color: var(--primary-light); }
+.sidebar-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+.sidebar-badge {
+  margin-right: auto; background: var(--danger); color: white;
+  min-width: 20px; height: 20px; border-radius: 10px; font-size: 0.65rem;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; padding: 0 5px;
+}
+.sidebar-badge.green { background: var(--success); }
+.sidebar-footer {
+  margin-top: auto; padding: 16px 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+  position: fixed; top: 0; left: 0; right: var(--sidebar-w);
+  height: 64px; background: white;
+  border-bottom: 1px solid rgba(43,123,185,0.1);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; z-index: 90;
+  box-shadow: 0 2px 8px rgba(28,35,49,0.05);
+}
+.topbar-title { font-size: 1.1rem; font-weight: 900; color: var(--dark); }
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.topbar-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid rgba(43,123,185,0.15);
+  border-radius: 10px; padding: 7px 14px;
+}
+.topbar-search input { border: none; background: none; outline: none; font-size: 0.875rem; color: var(--dark); width: 200px; direction: rtl; font-family: inherit; }
+.topbar-search input::placeholder { color: rgba(28,35,49,0.3); }
+.notif-btn {
+  position: relative; width: 38px; height: 38px; border-radius: 10px;
+  background: var(--surface); border: 1px solid rgba(43,123,185,0.12);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem;
+}
+.notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid white; }
+.admin-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 900; font-size: 0.9rem; cursor: pointer;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main { margin-right: var(--sidebar-w); padding: 80px 28px 40px; min-height: 100vh; }
+
+/* ===== PAGE ===== */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(6px); } }
+.page-header { margin-bottom: 24px; }
+.page-header h1 { font-size: 1.4rem; font-weight: 900; color: var(--dark); margin-bottom: 4px; }
+.page-header p { font-size: 0.875rem; color: var(--mid); }
+
+/* ===== CARDS ===== */
+.card {
+  background: white; border-radius: 16px;
+  border: 1px solid rgba(43,123,185,0.08);
+  box-shadow: 0 2px 12px rgba(28,35,49,0.04);
+}
+.card-body { padding: 20px; }
+.card-header {
+  padding: 16px 20px; border-bottom: 1px solid rgba(43,123,185,0.08);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: 0.95rem; font-weight: 800; color: var(--dark); }
+
+/* ===== STAT CARDS ===== */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: white; border-radius: 16px; padding: 20px;
+  border: 1px solid rgba(43,123,185,0.08);
+  box-shadow: 0 2px 12px rgba(28,35,49,0.04);
+  display: flex; align-items: center; gap: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(28,35,49,0.08); }
+.stat-icon {
+  width: 50px; height: 50px; border-radius: 14px; font-size: 1.4rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.stat-icon.blue   { background: rgba(43,123,185,0.1); }
+.stat-icon.green  { background: rgba(56,161,105,0.1); }
+.stat-icon.orange { background: rgba(214,158,46,0.1); }
+.stat-icon.red    { background: rgba(229,62,62,0.1); }
+.stat-info { flex: 1; text-align: right; }
+.stat-value { font-size: 1.6rem; font-weight: 900; color: var(--dark); line-height: 1; }
+.stat-label { font-size: 0.8rem; color: var(--mid); margin-top: 3px; }
+.stat-change { font-size: 0.75rem; font-weight: 700; margin-top: 4px; }
+.stat-change.up   { color: var(--success); }
+.stat-change.down { color: var(--danger); }
+
+/* ===== TABLE ===== */
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: right; padding: 12px 16px;
+  font-size: 0.75rem; font-weight: 700; color: var(--mid);
+  background: var(--surface); border-bottom: 1px solid rgba(43,123,185,0.08);
+}
+td { padding: 14px 16px; border-bottom: 1px solid rgba(43,123,185,0.05); font-size: 0.875rem; color: var(--dark); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(43,123,185,0.02); }
+.td-name { font-weight: 700; }
+.td-sub { font-size: 0.75rem; color: var(--mid); margin-top: 2px; }
+
+/* ===== BADGE ===== */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+}
+.badge-green  { background: rgba(56,161,105,0.12); color: #276749; }
+.badge-orange { background: rgba(214,158,46,0.12); color: #975a16; }
+.badge-blue   { background: rgba(43,123,185,0.12); color: var(--primary-dark); }
+.badge-red    { background: rgba(229,62,62,0.12);  color: #c53030; }
+.badge-gray   { background: var(--light); color: var(--mid); }
+
+/* ===== AVATAR ===== */
+.av {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 0.9rem; color: white; flex-shrink: 0;
+}
+.av-blue  { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+.av-teal  { background: linear-gradient(135deg, var(--primary-light), var(--primary)); }
+.av-dark  { background: linear-gradient(135deg, #2E3A4E, var(--dark)); }
+.av-green { background: linear-gradient(135deg, #48BB78, var(--success)); }
+.av-orange{ background: linear-gradient(135deg, #ECC94B, var(--warning)); }
+
+/* ===== BUTTON ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; text-decoration: none; border: none; font-family: inherit;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+.btn-outline:hover { background: var(--primary); color: white; }
+.btn-danger  { background: var(--danger); color: white; }
+.btn-danger:hover { background: #c53030; }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { background: #276749; }
+.btn-ghost   { background: var(--surface); color: var(--mid); border: 1px solid rgba(43,123,185,0.1); }
+.btn-ghost:hover { background: var(--light); }
+.btn-sm { padding: 5px 12px; font-size: 0.75rem; border-radius: 8px; }
+.btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 8px; }
+
+/* ===== INPUT ===== */
+.inp {
+  padding: 9px 14px; border-radius: 10px; font-size: 0.875rem;
+  border: 1.5px solid rgba(43,123,185,0.18); background: white;
+  color: var(--dark); outline: none; font-family: inherit; direction: rtl;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.inp:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(43,123,185,0.1); }
+.inp::placeholder { color: rgba(28,35,49,0.3); }
+select.inp { cursor: pointer; }
+.inp-label { font-size: 0.8rem; font-weight: 700; color: var(--dark); margin-bottom: 5px; display: block; }
+
+/* ===== CHART BARS ===== */
+.chart-bar-wrap { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding: 0 4px; }
+.chart-bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.chart-bar {
+  width: 100%; background: linear-gradient(180deg, var(--primary-light), var(--primary));
+  border-radius: 6px 6px 0 0; transition: height 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  min-height: 4px; position: relative; cursor: pointer;
+}
+.chart-bar:hover { opacity: 0.8; }
+.chart-bar-label { font-size: 0.65rem; color: var(--mid); font-weight: 600; }
+.chart-bar-val { font-size: 0.65rem; color: var(--primary); font-weight: 800; }
+
+/* ===== DONUT ===== */
+.donut-wrap { display: flex; align-items: center; gap: 20px; }
+.donut { width: 110px; height: 110px; border-radius: 50%; flex-shrink: 0; }
+.donut-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ===== TABS ===== */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid rgba(43,123,185,0.08); margin-bottom: 20px; }
+.tab-btn {
+  padding: 10px 20px; font-size: 0.875rem; font-weight: 700; color: var(--mid);
+  background: none; border: none; border-bottom: 2px solid transparent;
+  cursor: pointer; font-family: inherit; margin-bottom: -2px; transition: all 0.2s;
+}
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-btn:hover:not(.active) { color: var(--dark); }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(28,35,49,0.5); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: 20px; padding: 28px; max-width: 480px; width: 100%;
+  box-shadow: 0 20px 60px rgba(28,35,49,0.2);
+  animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn { from { opacity:0; transform: scale(0.95) translateY(10px); } }
+.modal-title { font-size: 1.1rem; font-weight: 900; color: var(--dark); margin-bottom: 20px; text-align: right; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed; bottom: 24px; left: 24px; z-index: 999;
+  background: var(--dark); color: white; padding: 12px 20px;
+  border-radius: 12px; font-size: 0.875rem; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(28,35,49,0.3);
+  animation: slideUp 0.3s ease; display: flex; align-items: center; gap: 8px;
+}
+@keyframes slideUp { from { opacity:0; transform: translateY(12px); } }
+
+/* ===== PROGRESS ===== */
+.progress { height: 6px; background: var(--light); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+
+/* ===== ACTIVITY ITEMS ===== */
+.activity-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(43,123,185,0.05);
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+/* ===== MISC ===== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.flex { display: flex; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.text-right { text-align: right; }
+.text-mid { color: var(--mid); }
+.text-sm { font-size: 0.8rem; }
+.text-xs { font-size: 0.72rem; }
+.font-bold { font-weight: 800; }
+.mt-4 { margin-top: 16px; }
+.mb-4 { margin-bottom: 16px; }
+.w-full { width: 100%; }
+.mb-2 { margin-bottom: 8px; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+
+/* ===== TOGGLE ===== */
+.toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: #CBD5E0; border-radius: 24px; transition: 0.3s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute; width: 18px; height: 18px;
+  left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s;
+}
+.toggle input:checked + .toggle-slider { background: var(--primary); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">🏗</div>
+    <div>
+      <div class="sidebar-logo-text"><span>Smart</span><span>Build</span></div>
+      <div class="sidebar-logo-sub">لوحة التحكم</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">القائمة الرئيسية</div>
+  <button class="sidebar-item active" onclick="showPage('dashboard',this)">
+    <span class="icon">📊</span><span>لوحة التحكم</span>
+  </button>
+  <button class="sidebar-item" onclick="showPage('workers',this)">
+    <span class="icon">🔨</span><span>المهنيون</span>
+    <span class="sidebar-badge" id="badge-workers">2</span>
+  </button>
+  <button class="sidebar-item" onclick="showPage('clients',this)">
+    <span class="icon">👥</span><span>الزبائن</span>
+  </button>
+  <button class="sidebar-item" onclick="showPage('requests',this)">
+    <span class="icon">📋</span><span>الطلبات</span>
+  </button>
+
+  <div class="sidebar-section">المالية</div>
+  <button class="sidebar-item" onclick="showPage('subscriptions',this)">
+    <span class="icon">💎</span><span>الاشتراكات</span>
+  </button>
+
+  <div class="sidebar-section">المحتوى</div>
+  <button class="sidebar-item" onclick="showPage('reviews',this)">
+    <span class="icon">⭐</span><span>التقييمات</span>
+    <span class="sidebar-badge" id="badge-reviews">2</span>
+  </button>
+
+  <div class="sidebar-section">النظام</div>
+  <button class="sidebar-item" onclick="showPage('settings',this)">
+    <span class="icon">⚙️</span><span>الإعدادات</span>
+  </button>
+
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;color:white;">مدير النظام</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);">admin@smartbuild.dz</div>
+      </div>
+      <div class="av av-blue" style="margin-right:auto;">A</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ===== TOPBAR ===== -->
+<header class="topbar">
+  <div class="topbar-right">
+    <div class="topbar-search">
+      <span>🔍</span>
+      <input type="text" placeholder="بحث سريع..." id="global-search" oninput="globalSearch(this.value)"/>
+    </div>
+    <div class="notif-btn" onclick="showPage('reviews', document.querySelector('[onclick*=reviews]'))">🔔<div class="notif-dot"></div></div>
+    <div class="admin-avatar">A</div>
+  </div>
+  <div class="topbar-title" id="topbar-title">لوحة التحكم</div>
+</header>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+
+<!-- ============================== -->
+<!-- PAGE: DASHBOARD                -->
+<!-- ============================== -->
+<div id="page-dashboard" class="page active">
+  <div class="page-header">
+    <h1>لوحة التحكم 📊</h1>
+    <p>مرحباً! إليك ملخص نشاط المنصة اليوم</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">👥</div>
+      <div class="stat-info">
+        <div class="stat-value">847</div>
+        <div class="stat-label">إجمالي المستخدمين</div>
+        <div class="stat-change up">↑ +12 هذا الأسبوع</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">🔨</div>
+      <div class="stat-info">
+        <div class="stat-value">312</div>
+        <div class="stat-label">مهني نشط</div>
+        <div class="stat-change up">↑ +5 هذا الأسبوع</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">📋</div>
+      <div class="stat-info">
+        <div class="stat-value">1,284</div>
+        <div class="stat-label">إجمالي الطلبات</div>
+        <div class="stat-change up">↑ +48 هذا الشهر</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">💰</div>
+      <div class="stat-info">
+        <div class="stat-value">238,500</div>
+        <div class="stat-label">إيرادات الاشتراكات (دج)</div>
+        <div class="stat-change up">↑ +18% هذا الشهر</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+      <div class="card-header">
+        <span class="text-sm text-mid">آخر 7 أشهر</span>
+        <span class="card-title">📈 نمو المستخدمين</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-bar-wrap" id="monthly-chart"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="text-sm text-mid">آخر التحديثات</span>
+        <span class="card-title">🔔 النشاط الأخير</span>
+      </div>
+      <div class="card-body" id="recent-activity"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-orange">2 في الانتظار</span>
+      <span class="card-title">⏳ مهنيون ينتظرون التوثيق</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr>
+          <th>المهني</th><th>التخصص</th><th>تاريخ التسجيل</th><th>الإجراء</th>
+        </tr></thead>
+        <tbody id="pending-workers"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE: WORKERS                  -->
+<!-- ============================== -->
+<div id="page-workers" class="page">
+  <div class="page-header">
+    <h1>المهنيون 🔨</h1>
+    <p>إدارة حسابات المهنيين والتوثيق</p>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="padding:14px 20px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="openModal('add-worker-modal')">+ إضافة مهني</button>
+        <div style="display:flex;gap:8px;margin-right:auto;">
+          <span id="worker-count" style="font-size:0.85rem;color:var(--mid);align-self:center;"></span>
+          <select class="inp" style="padding:7px 12px;" id="worker-filter" onchange="renders.workers()">
+            <option value="all">كل الحالات</option>
+            <option value="active">نشط</option>
+            <option value="pending">انتظار</option>
+            <option value="suspended">موقوف</option>
+          </select>
+          <input type="text" id="worker-search" class="inp" placeholder="🔍 بحث..." oninput="renders.workers()" style="width:180px;"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr>
+          <th>المهني</th><th>المدينة</th><th>التقييم</th><th>الباقة</th><th>الحالة</th><th>تاريخ الانضمام</th><th>الإجراء</th>
+        </tr></thead>
+        <tbody id="workers-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE: CLIENTS                  -->
+<!-- ============================== -->
+<div id="page-clients" class="page">
+  <div class="page-header">
+    <h1>الزبائن 👥</h1>
+    <p>إدارة حسابات الزبائن</p>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="padding:14px 20px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="client-count" style="font-size:0.85rem;color:var(--mid);"></span>
+        <input type="text" id="client-search" class="inp" placeholder="🔍 بحث..." oninput="renders.clients()" style="width:200px;margin-right:auto;"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr>
+          <th>الزبون</th><th>المدينة</th><th>الطلبات</th><th>الحالة</th><th>تاريخ الانضمام</th><th>الإجراء</th>
+        </tr></thead>
+        <tbody id="clients-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE: REQUESTS                 -->
+<!-- ============================== -->
+<div id="page-requests" class="page">
+  <div class="page-header">
+    <h1>الطلبات 📋</h1>
+    <p>كل الطلبات بين الزبائن والمهنيين</p>
+  </div>
+
+  <div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+      <div class="stat-icon blue">📋</div>
+      <div class="stat-info"><div class="stat-value">1,284</div><div class="stat-label">إجمالي الطلبات</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">⏳</div>
+      <div class="stat-info"><div class="stat-value">38</div><div class="stat-label">قيد الانتظار</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">✅</div>
+      <div class="stat-info"><div class="stat-value">1,198</div><div class="stat-label">منجزة</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">❌</div>
+      <div class="stat-info"><div class="stat-value">48</div><div class="stat-label">ملغية</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div style="display:flex;gap:8px;">
+        <select class="inp" style="padding:6px 12px;font-size:0.8rem;" id="req-filter" onchange="renders.requests()">
+          <option value="all">كل الحالات</option>
+          <option value="pending">انتظار</option>
+          <option value="accepted">مقبول</option>
+          <option value="done">منجز</option>
+          <option value="cancelled">ملغي</option>
+        </select>
+      </div>
+      <span class="card-title">قائمة الطلبات</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr>
+          <th>#</th><th>الزبون</th><th>المهني</th><th>نوع الخدمة</th><th>المدينة</th><th>الميزانية</th><th>الحالة</th><th>التاريخ</th>
+        </tr></thead>
+        <tbody id="requests-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE: SUBSCRIPTIONS            -->
+<!-- ============================== -->
+<div id="page-subscriptions" class="page">
+  <div class="page-header">
+    <h1>الاشتراكات 💎</h1>
+    <p>متابعة الباقات والمدفوعات</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+      <div class="card-header"><span class="card-title">توزيع الباقات</span></div>
+      <div class="card-body" id="plan-dist"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">ملخص الإيرادات</span></div>
+      <div class="card-body">
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-size:0.85rem;color:var(--mid);margin-bottom:6px;">إيرادات الشهر الحالي</div>
+          <div id="sub-revenue" style="font-size:2rem;font-weight:900;color:var(--success);">14,500 دج</div>
+          <div style="font-size:0.8rem;color:var(--mid);margin-top:8px;">من الاشتراكات النشطة</div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;">
+          <div style="text-align:center;padding:12px 20px;background:var(--surface);border-radius:12px;">
+            <div style="font-weight:900;color:var(--primary);font-size:1.3rem;">4</div>
+            <div style="font-size:0.72rem;color:var(--mid);">نشط</div>
+          </div>
+          <div style="text-align:center;padding:12px 20px;background:var(--surface);border-radius:12px;">
+            <div style="font-weight:900;color:var(--danger);font-size:1.3rem;">2</div>
+            <div style="font-size:0.72rem;color:var(--mid);">منتهي</div>
+          </div>
+          <div style="text-align:center;padding:12px 20px;background:var(--surface);border-radius:12px;">
+            <div style="font-weight:900;color:var(--warning);font-size:1.3rem;">1</div>
+            <div style="font-size:0.72rem;color:var(--mid);">قيد التجديد</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">سجل الاشتراكات</span></div>
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr>
+          <th>المهني</th><th>الباقة</th><th>السعر</th><th>طريقة الدفع</th><th>تاريخ البداية</th><th>تاريخ الانتهاء</th><th>الحالة</th>
+        </tr></thead>
+        <tbody id="subs-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE: REVIEWS                  -->
+<!-- ============================== -->
+<div id="page-reviews" class="page">
+  <div class="page-header">
+    <h1>التقييمات ⭐</h1>
+    <p>مراجعة وإدارة تقييمات الزبائن</p>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-bottom:16px;">
+    <button class="btn btn-outline" id="rev-tab-all" onclick="setReviewTab('all',this)">الكل</button>
+    <button class="btn btn-ghost" id="rev-tab-pending" onclick="setReviewTab('pending',this)">⏳ تحتاج مراجعة</button>
+    <button class="btn btn-ghost" id="rev-tab-approved" onclick="setReviewTab('approved',this)">✅ معتمدة</button>
+  </div>
+
+  <div id="reviews-list"></div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE: SETTINGS                 -->
+<!-- ============================== -->
+<div id="page-settings" class="page">
+  <div class="page-header">
+    <h1>الإعدادات ⚙️</h1>
+    <p>إعدادات المنصة والباقات</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">💎 أسعار الباقات</span></div>
+      <div class="card-body">
+        <div style="margin-bottom:14px;">
+          <label class="inp-label">الباقة الأساسية 🥉 (دج/شهر)</label>
+          <input class="inp w-full" type="number" value="500"/>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="inp-label">الباقة الاحترافية 💎 (دج/شهر)</label>
+          <input class="inp w-full" type="number" value="1500"/>
+        </div>
+        <div style="margin-bottom:20px;">
+          <label class="inp-label">باقة النخبة 👑 (دج/شهر)</label>
+          <input class="inp w-full" type="number" value="3000"/>
+        </div>
+        <button class="btn btn-primary w-full" onclick="toast('✅ تم حفظ الأسعار')">حفظ الأسعار</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">📱 إعدادات التطبيق</span></div>
+      <div class="card-body">
+        <div style="margin-bottom:14px;">
+          <label class="inp-label">اسم المنصة</label>
+          <input class="inp w-full" type="text" value="SmartBuild"/>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="inp-label">البريد الإلكتروني للدعم</label>
+          <input class="inp w-full" type="email" value="support@smartbuild.dz"/>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="inp-label">الحد الأقصى للطلبات (الباقة الأساسية)</label>
+          <input class="inp w-full" type="number" value="5"/>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border-radius:10px;margin-bottom:14px;">
+          <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+          <span style="font-size:0.875rem;color:var(--dark);">قبول مهنيين جدد</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border-radius:10px;margin-bottom:20px;">
+          <label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label>
+          <span style="font-size:0.875rem;color:var(--dark);">وضع الصيانة</span>
+        </div>
+        <button class="btn btn-primary w-full" onclick="toast('✅ تم حفظ الإعدادات')">حفظ الإعدادات</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">👤 حساب المدير</span></div>
+      <div class="card-body">
+        <div style="margin-bottom:14px;">
+          <label class="inp-label">اسم المدير</label>
+          <input class="inp w-full" value="مدير النظام"/>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="inp-label">البريد الإلكتروني</label>
+          <input class="inp w-full" type="email" value="admin@smartbuild.dz"/>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="inp-label">كلمة مرور جديدة</label>
+          <input class="inp w-full" type="password" placeholder="••••••••"/>
+        </div>
+        <button class="btn btn-primary w-full" onclick="toast('✅ تم تحديث الحساب')">تحديث الحساب</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">🔔 إعدادات الإشعارات</span></div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border-radius:10px;">
+            <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+            <span style="font-size:0.875rem;color:var(--dark);">إشعار عند تسجيل مهني جديد</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border-radius:10px;">
+            <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+            <span style="font-size:0.875rem;color:var(--dark);">إشعار عند تقييم يحتاج مراجعة</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border-radius:10px;">
+            <label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label>
+            <span style="font-size:0.875rem;color:var(--dark);">تقرير يومي بالإيرادات</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border-radius:10px;">
+            <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+            <span style="font-size:0.875rem;color:var(--dark);">إشعار عند انتهاء اشتراك</span>
+          </div>
+        </div>
+        <button class="btn btn-primary w-full mt-4" onclick="toast('✅ تم حفظ الإشعارات')">حفظ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ============================== -->
+<!-- MODALS                         -->
+<!-- ============================== -->
+
+<!-- Worker Detail Modal -->
+<div class="modal-overlay" id="worker-modal" onclick="if(event.target===this)closeModal('worker-modal')">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <button onclick="closeModal('worker-modal')" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--mid);">✕</button>
+      <div style="font-size:1rem;font-weight:900;color:var(--dark);">تفاصيل المهني</div>
+    </div>
+    <div id="worker-modal-content"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-start;">
+      <button class="btn btn-danger" onclick="closeModal('worker-modal');toast('⚠️ تم تعليق الحساب','var(--danger)')">تعليق الحساب</button>
+      <button class="btn btn-ghost" onclick="closeModal('worker-modal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Worker Modal -->
+<div class="modal-overlay" id="add-worker-modal" onclick="if(event.target===this)closeModal('add-worker-modal')">
+  <div class="modal" style="max-width:500px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <button onclick="closeModal('add-worker-modal')" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--mid);">✕</button>
+      <div style="font-size:1rem;font-weight:900;color:var(--dark);">➕ إضافة مهني يدوياً</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div><label class="inp-label">الاسم</label><input class="inp w-full" id="new-w-name" placeholder="الاسم الكامل"/></div>
+      <div><label class="inp-label">رقم الهاتف</label><input class="inp w-full" id="new-w-phone" placeholder="05XX..."/></div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label class="inp-label">التخصص</label>
+      <select class="inp w-full" id="new-w-spec">
+        <option>مقاول بناء</option><option>مهندس معماري</option><option>مصمم داخلي</option>
+        <option>نجار / أثاث</option><option>كهربائي</option><option>سباك</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><label class="inp-label">الولاية</label>
+        <select class="inp w-full" id="new-w-city">
+          <option>الجزائر</option><option>وهران</option><option>قسنطينة</option><option>عنابة</option><option>الوادي</option>
+        </select></div>
+      <div><label class="inp-label">الباقة</label>
+        <select class="inp w-full" id="new-w-plan">
+          <option value="basic">أساسية 🥉</option><option value="pro">احترافية 💎</option><option value="elite">نخبة 👑</option>
+        </select></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" style="flex:2;" onclick="addWorker()">إضافة المهني</button>
+      <button class="btn btn-ghost" onclick="closeModal('add-worker-modal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Client Detail Modal -->
+<div class="modal-overlay" id="client-modal" onclick="if(event.target===this)closeModal('client-modal')">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <button onclick="closeModal('client-modal')" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--mid);">✕</button>
+      <div style="font-size:1rem;font-weight:900;color:var(--dark);">تفاصيل الزبون</div>
+    </div>
+    <div id="client-modal-content"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-danger" onclick="closeModal('client-modal');toast('⚠️ تم تعليق الحساب','var(--danger)')">تعليق</button>
+      <button class="btn btn-ghost" onclick="closeModal('client-modal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================
+// DATA
+// ============================
+const COLORS = {
+  avClasses: ['av-blue','av-teal','av-dark','av-green','av-orange'],
+  plans: { basic:'badge-gray', pro:'badge-blue', elite:'badge-orange' },
+  planLabel: { basic:'أساسية 🥉', pro:'احترافية 💎', elite:'نخبة 👑' },
+  status: {
+    active:'badge-green', pending:'badge-orange', suspended:'badge-red',
+    done:'badge-green', cancelled:'badge-red', accepted:'badge-blue'
+  },
+  statusLabel: {
+    active:'نشط', pending:'انتظار', suspended:'موقوف',
+    done:'منجز', cancelled:'ملغي', accepted:'مقبول'
+  }
+};
+
+let WORKERS = [
+  { id:1, name:'أحمد بن علي', spec:'مقاول بناء', city:'الجزائر', rating:4.8, reviews:32, plan:'elite', status:'active', joined:'2024-01-15', phone:'0551234567' },
+  { id:2, name:'يوسف خالد', spec:'مهندس معماري', city:'وهران', rating:4.5, reviews:18, plan:'pro', status:'active', joined:'2024-02-20', phone:'0661234567' },
+  { id:3, name:'محمد سعيد', spec:'كهربائي', city:'قسنطينة', rating:4.2, reviews:9, plan:'basic', status:'pending', joined:'2025-01-03', phone:'0771234567' },
+  { id:4, name:'إبراهيم حسين', spec:'نجار / أثاث', city:'الجزائر', rating:4.6, reviews:24, plan:'pro', status:'active', joined:'2024-05-10', phone:'0551111111' },
+  { id:5, name:'سفيان مزياني', spec:'سباك', city:'عنابة', rating:3.9, reviews:7, plan:'basic', status:'suspended', joined:'2024-03-28', phone:'0661111111' },
+  { id:6, name:'كريم بوعلام', spec:'مصمم داخلي', city:'الجزائر', rating:4.9, reviews:41, plan:'elite', status:'active', joined:'2023-11-05', phone:'0771111111' },
+  { id:7, name:'بلال عمر', spec:'مقاول بناء', city:'وهران', rating:0, reviews:0, plan:'basic', status:'pending', joined:'2025-01-10', phone:'0551234000' },
+];
+
+const CLIENTS = [
+  { id:1, name:'نجوى بلعيد', city:'الجزائر', requests:5, status:'active', joined:'2024-03-01', email:'najwa@mail.com' },
+  { id:2, name:'هشام قشي', city:'قسنطينة', requests:2, status:'active', joined:'2024-06-15', email:'hicham@mail.com' },
+  { id:3, name:'سارة معلم', city:'وهران', requests:8, status:'active', joined:'2023-12-10', email:'sara@mail.com' },
+  { id:4, name:'عمر فارس', city:'الجزائر', requests:1, status:'active', joined:'2025-01-02', email:'omar@mail.com' },
+  { id:5, name:'ليلى حمدي', city:'عنابة', requests:3, status:'suspended', joined:'2024-09-20', email:'layla@mail.com' },
+  { id:6, name:'رضا بوزيد', city:'الجزائر', requests:11, status:'active', joined:'2023-09-05', email:'rida@mail.com' },
+  { id:7, name:'آمال سعدي', city:'وهران', requests:0, status:'active', joined:'2025-01-08', email:'amal@mail.com' },
+];
+
+const REQUESTS = [
+  { id:1001, client:'نجوى بلعيد', worker:'أحمد بن علي', service:'مقاولة بناء', city:'الجزائر', budget:'150,000', status:'done', date:'2025-01-05' },
+  { id:1002, client:'هشام قشي', worker:'يوسف خالد', service:'تصميم معماري', city:'قسنطينة', budget:'80,000', status:'accepted', date:'2025-01-06' },
+  { id:1003, client:'سارة معلم', worker:'كريم بوعلام', service:'تصميم داخلي', city:'وهران', budget:'45,000', status:'done', date:'2025-01-04' },
+  { id:1004, client:'عمر فارس', worker:'—', service:'سباكة', city:'الجزائر', budget:'12,000', status:'pending', date:'2025-01-10' },
+  { id:1005, client:'رضا بوزيد', worker:'إبراهيم حسين', service:'نجارة', city:'الجزائر', budget:'30,000', status:'done', date:'2024-12-28' },
+  { id:1006, client:'ليلى حمدي', worker:'محمد سعيد', service:'كهرباء', city:'عنابة', budget:'8,000', status:'cancelled', date:'2024-12-30' },
+  { id:1007, client:'آمال سعدي', worker:'—', service:'مقاولة بناء', city:'وهران', budget:'200,000', status:'pending', date:'2025-01-10' },
+];
+
+let REVIEWS = [
+  { id:1, author:'نجوى بلعيد', worker:'أحمد بن علي', rating:5, comment:'عمل ممتاز وسريع، أنصح به بشدة', date:'2025-01-06', status:'pending' },
+  { id:2, author:'سارة معلم', worker:'كريم بوعلام', rating:5, comment:'إبداع حقيقي في التصميم، راضية جداً عن النتيجة', date:'2025-01-05', status:'pending' },
+  { id:3, author:'هشام قشي', worker:'يوسف خالد', rating:4, comment:'محترف ودقيق في العمل', date:'2025-01-04', status:'approved' },
+  { id:4, author:'رضا بوزيد', worker:'إبراهيم حسين', rating:4, comment:'جودة جيدة والتسليم في الوقت المحدد', date:'2024-12-29', status:'approved' },
+];
+
+const SUBSCRIPTIONS = [
+  { worker:'كريم بوعلام', plan:'elite', price:'3,000 دج', method:'بريد الجزائر', start:'2024-12-01', end:'2025-01-01', status:'active' },
+  { worker:'أحمد بن علي', plan:'elite', price:'3,000 دج', method:'CCP', start:'2024-12-15', end:'2025-01-15', status:'active' },
+  { worker:'يوسف خالد', plan:'pro', price:'1,500 دج', method:'بريد الجزائر', start:'2024-11-20', end:'2024-12-20', status:'expired' },
+  { worker:'إبراهيم حسين', plan:'pro', price:'1,500 دج', method:'دفع يدوي', start:'2024-12-10', end:'2025-01-10', status:'active' },
+  { worker:'سفيان مزياني', plan:'basic', price:'500 دج', method:'CCP', start:'2024-10-01', end:'2024-11-01', status:'expired' },
+  { worker:'محمد سعيد', plan:'basic', price:'500 دج', method:'بريد الجزائر', start:'2025-01-03', end:'2025-02-03', status:'active' },
+  { worker:'بلال عمر', plan:'basic', price:'500 دج', method:'—', start:'—', end:'—', status:'pending' },
+];
+
+const MONTHLY = [
+  { label:'اوت', val:52 }, { label:'جويلية', val:71 }, { label:'سبتمبر', val:89 },
+  { label:'اكتوبر', val:103 }, { label:'نفمبر', val:134 }, { label:'ديسمبر', val:161 }, { label:'جانفي', val:187 },
+];
+
+const ACTIVITY = [
+  { icon:'🔨', text:'مهني جديد: بلال عمر سجّل وينتظر التوثيق', time:'منذ ساعة', color:'var(--warning)' },
+  { icon:'⭐', text:'تقييم جديد من نجوى بلعيد ينتظر الموافقة', time:'منذ 2 ساعة', color:'var(--primary)' },
+  { icon:'📋', text:'طلب جديد من آمال سعدي - مقاولة بناء', time:'منذ 3 ساعات', color:'var(--success)' },
+  { icon:'💎', text:'كريم بوعلام جدّد اشتراك النخبة', time:'منذ 5 ساعات', color:'var(--primary-light)' },
+  { icon:'❌', text:'تم إلغاء طلب ليلى حمدي #1006', time:'منذ يوم', color:'var(--danger)' },
+];
+
+// ============================
+// NAVIGATION
+// ============================
+const pageTitles = {
+  dashboard:'لوحة التحكم', workers:'المهنيون', clients:'الزبائن',
+  requests:'الطلبات', subscriptions:'الاشتراكات', reviews:'التقييمات', settings:'الإعدادات'
+};
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[id] || '';
+  renders[id] && renders[id]();
+}
+
+// ============================
+// MODAL
+// ============================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ============================
+// TOAST
+// ============================
+function toast(msg, bg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.background = bg || 'var(--dark)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ============================
+// HELPERS
+// ============================
+function avColor(name) {
+  const n = (name||'').charCodeAt(0) % COLORS.avClasses.length;
+  return COLORS.avClasses[n];
+}
+function initials(name) { return (name||'').split(' ').map(w=>w[0]).join('').substring(0,2); }
+function stars(r) { return '★'.repeat(Math.round(r))+'☆'.repeat(5-Math.round(r)); }
+
+// ============================
+// RENDERS
+// ============================
+const renders = {
+  dashboard() {
+    // Chart
+    const max = Math.max(...MONTHLY.map(m=>m.val));
+    document.getElementById('monthly-chart').innerHTML = MONTHLY.map(m=>`
+      <div class="chart-bar-item">
+        <div class="chart-bar-val">${m.val}</div>
+        <div class="chart-bar" style="height:${Math.round(m.val/max*120)}px;" title="${m.val} مستخدم"></div>
+        <div class="chart-bar-label">${m.label}</div>
+      </div>`).join('');
+    // Activity
+    document.getElementById('recent-activity').innerHTML = ACTIVITY.map(a=>`
+      <div class="activity-item">
+        <div class="activity-dot" style="background:${a.color};margin-top:4px;"></div>
+        <div style="flex:1;text-align:right;">
+          <div style="font-size:0.85rem;font-weight:600;color:var(--dark);">${a.icon} ${a.text}</div>
+          <div style="font-size:0.72rem;color:var(--mid);margin-top:2px;">${a.time}</div>
+        </div>
+      </div>`).join('');
+    // Pending workers
+    const pending = WORKERS.filter(w=>w.status==='pending');
+    document.getElementById('pending-workers').innerHTML = pending.map(w=>`
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:10px;">
+          <div class="av ${avColor(w.name)}">${initials(w.name)}</div>
+          <div><div class="td-name">${w.name}</div><div class="td-sub">${w.spec}</div></div>
+        </div></td>
+        <td>${w.spec}</td>
+        <td>${w.joined}</td>
+        <td>
+          <button class="btn btn-success btn-sm" onclick="approveWorker(${w.id})">✓ توثيق</button>
+          <button class="btn btn-ghost btn-sm" style="margin-right:4px;" onclick="openWorkerModal(${w.id})">عرض</button>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--mid);padding:30px;">لا يوجد مهنيون في الانتظار</td></tr>';
+  },
+
+  workers() {
+    const filter = document.getElementById('worker-filter')?.value || 'all';
+    const search = (document.getElementById('worker-search')?.value || '').toLowerCase();
+    const list = WORKERS.filter(w =>
+      (filter === 'all' || w.status === filter) &&
+      (w.name.toLowerCase().includes(search) || w.spec.toLowerCase().includes(search) || w.city.includes(search))
+    );
+    document.getElementById('worker-count').textContent = list.length + ' مهني';
+    document.getElementById('workers-table').innerHTML = list.map(w=>`
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:10px;">
+          <div class="av ${avColor(w.name)}">${initials(w.name)}</div>
+          <div><div class="td-name">${w.name}</div><div class="td-sub">${w.spec}</div></div>
+        </div></td>
+        <td>${w.city}</td>
+        <td><span style="color:var(--warning);font-weight:700;">${w.rating>0?w.rating.toFixed(1):'—'}</span>
+          ${w.reviews>0?`<span style="font-size:0.72rem;color:var(--mid);"> (${w.reviews})</span>`:''}
+        </td>
+        <td><span class="badge ${COLORS.plans[w.plan]}">${COLORS.planLabel[w.plan]}</span></td>
+        <td><span class="badge ${COLORS.status[w.status]}">${COLORS.statusLabel[w.status]}</span></td>
+        <td>${w.joined}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="openWorkerModal(${w.id})">عرض</button>
+          ${w.status==='pending'?`<button class="btn btn-success btn-sm" style="margin-right:4px;" onclick="approveWorker(${w.id})">✓ توثيق</button>`:''}
+        </td>
+      </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--mid);padding:30px;">لا توجد نتائج</td></tr>';
+  },
+
+  clients() {
+    const search = (document.getElementById('client-search')?.value || '').toLowerCase();
+    const list = CLIENTS.filter(c => c.name.toLowerCase().includes(search) || c.city.includes(search));
+    document.getElementById('client-count').textContent = list.length + ' زبون';
+    document.getElementById('clients-table').innerHTML = list.map(c=>`
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:10px;">
+          <div class="av ${avColor(c.name)}">${initials(c.name)}</div>
+          <div><div class="td-name">${c.name}</div><div class="td-sub">${c.email}</div></div>
+        </div></td>
+        <td>${c.city}</td>
+        <td><span style="font-weight:700;">${c.requests}</span> <span class="text-mid text-xs">طلب</span></td>
+        <td><span class="badge ${c.status==='active'?'badge-green':'badge-red'}">${c.status==='active'?'نشط':'موقوف'}</span></td>
+        <td>${c.joined}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="openClientModal(${c.id})">عرض</button></td>
+      </tr>`).join('');
+  },
+
+  requests() {
+    const filter = document.getElementById('req-filter')?.value || 'all';
+    const list = REQUESTS.filter(r => filter === 'all' || r.status === filter);
+    document.getElementById('requests-table').innerHTML = list.map(r=>`
+      <tr>
+        <td style="color:var(--mid);font-size:0.75rem;">#${r.id}</td>
+        <td>${r.client}</td>
+        <td>${r.worker}</td>
+        <td>${r.service}</td>
+        <td>${r.city}</td>
+        <td style="font-weight:700;">${r.budget} دج</td>
+        <td><span class="badge ${COLORS.status[r.status]}">${COLORS.statusLabel[r.status]}</span></td>
+        <td>${r.date}</td>
+      </tr>`).join('');
+  },
+
+  subscriptions() {
+    // Donut chart via conic-gradient
+    const counts = { elite: WORKERS.filter(w=>w.plan==='elite').length, pro: WORKERS.filter(w=>w.plan==='pro').length, basic: WORKERS.filter(w=>w.plan==='basic').length };
+    const total = counts.elite + counts.pro + counts.basic;
+    const pcts = { elite: Math.round(counts.elite/total*100), pro: Math.round(counts.pro/total*100), basic: Math.round(counts.basic/total*100) };
+    const e = pcts.elite, p = e+pcts.pro;
+    document.getElementById('plan-dist').innerHTML = `
+      <div class="donut-wrap">
+        <div class="donut" style="background:conic-gradient(var(--warning) 0% ${e}%, var(--primary) ${e}% ${p}%, var(--mid) ${p}% 100%);"></div>
+        <div class="donut-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span>نخبة — ${counts.elite} مهني (${pcts.elite}%)</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span>احترافية — ${counts.pro} مهني (${pcts.pro}%)</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--mid)"></div><span>أساسية — ${counts.basic} مهني (${pcts.basic}%)</span></div>
+        </div>
+      </div>`;
+    // Table
+    document.getElementById('subs-table').innerHTML = SUBSCRIPTIONS.map(s=>`
+      <tr>
+        <td><div style="font-weight:700;">${s.worker}</div></td>
+        <td><span class="badge ${COLORS.plans[s.plan]}">${COLORS.planLabel[s.plan]}</span></td>
+        <td style="font-weight:700;">${s.price}</td>
+        <td>${s.method}</td>
+        <td>${s.start}</td>
+        <td>${s.end}</td>
+        <td><span class="badge ${s.status==='active'?'badge-green':s.status==='expired'?'badge-red':'badge-orange'}">${s.status==='active'?'نشط':s.status==='expired'?'منتهي':'انتظار'}</span></td>
+      </tr>`).join('');
+  },
+
+  reviews() {
+    setReviewTab('all', document.getElementById('rev-tab-all'));
+  }
+};
+
+// ============================
+// REVIEWS
+// ============================
+let currentRevTab = 'all';
+function setReviewTab(tab, btn) {
+  currentRevTab = tab;
+  document.querySelectorAll('[id^="rev-tab-"]').forEach(b => { b.className = 'btn btn-ghost'; });
+  if (btn) btn.className = 'btn btn-outline';
+  const list = tab === 'all' ? REVIEWS : REVIEWS.filter(r=>r.status===tab);
+  const pending = REVIEWS.filter(r=>r.status==='pending').length;
+  document.getElementById('badge-reviews').textContent = pending;
+  document.getElementById('badge-reviews').style.display = pending ? '' : 'none';
+  document.getElementById('reviews-list').innerHTML = list.map(r=>`
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-body">
+        <div class="flex-between mb-2">
+          <div style="display:flex;gap:8px;">
+            ${r.status==='pending'?`
+              <button class="btn btn-danger btn-sm" onclick="deleteReview(${r.id})">🗑 حذف</button>
+              <button class="btn btn-success btn-sm" onclick="approveReview(${r.id})">✓ موافقة</button>
+            `:`<span class="badge badge-green">✓ معتمد</span>`}
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700;color:var(--dark);">${r.author} <span style="color:var(--mid);font-weight:400;">←</span> ${r.worker}</div>
+            <div style="font-size:0.75rem;color:var(--mid);">${r.date}</div>
+            <div style="color:var(--warning);letter-spacing:2px;">${stars(r.rating)}</div>
+          </div>
+        </div>
+        <p style="font-size:0.875rem;color:var(--mid);text-align:right;background:var(--surface);padding:12px;border-radius:10px;">"${r.comment}"</p>
+      </div>
+    </div>`).join('') || '<div style="text-align:center;color:var(--mid);padding:40px;background:white;border-radius:16px;">لا توجد تقييمات</div>';
+}
+
+function approveReview(id) {
+  const r = REVIEWS.find(r=>r.id===id);
+  if (r) { r.status='approved'; setReviewTab(currentRevTab, document.getElementById('rev-tab-'+currentRevTab)); toast('✅ تم اعتماد التقييم'); }
+}
+function deleteReview(id) {
+  REVIEWS = REVIEWS.filter(r=>r.id!==id);
+  setReviewTab(currentRevTab, document.getElementById('rev-tab-'+currentRevTab));
+  toast('🗑 تم حذف التقييم','var(--danger)');
+}
+
+// ============================
+// WORKER MODAL
+// ============================
+function openWorkerModal(id) {
+  const w = WORKERS.find(w=>w.id===id);
+  if (!w) return;
+  document.getElementById('worker-modal-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:16px;background:var(--surface);border-radius:12px;">
+      <div class="av ${avColor(w.name)}" style="width:48px;height:48px;font-size:1.1rem;">${initials(w.name)}</div>
+      <div style="text-align:right;">
+        <div style="font-weight:900;font-size:1rem;color:var(--dark);">${w.name}</div>
+        <div style="font-size:0.8rem;color:var(--mid);">${w.spec} — ${w.city}</div>
+        <div style="font-size:0.8rem;color:var(--mid);">${w.phone}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="padding:12px;background:var(--surface);border-radius:10px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:900;color:var(--warning);">${w.rating>0?w.rating.toFixed(1):'—'}</div>
+        <div style="font-size:0.72rem;color:var(--mid);">التقييم (${w.reviews} تقييم)</div>
+      </div>
+      <div style="padding:12px;background:var(--surface);border-radius:10px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:900;color:var(--primary);">${COLORS.planLabel[w.plan]}</div>
+        <div style="font-size:0.72rem;color:var(--mid);">الباقة الحالية</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--surface);border-radius:10px;">
+      <span class="badge ${COLORS.status[w.status]}">${COLORS.statusLabel[w.status]}</span>
+      <span style="font-size:0.8rem;color:var(--mid);">انضم: ${w.joined}</span>
+    </div>`;
+  openModal('worker-modal');
+}
+
+function approveWorker(id) {
+  const w = WORKERS.find(w=>w.id===id);
+  if (w) {
+    w.status='active';
+    const pending = WORKERS.filter(w=>w.status==='pending').length;
+    document.getElementById('badge-workers').textContent = pending;
+    renders.dashboard();
+    renders.workers();
+    toast(`✅ تم توثيق ${w.name}`);
+  }
+}
+
+// ============================
+// CLIENT MODAL
+// ============================
+function openClientModal(id) {
+  const c = CLIENTS.find(c=>c.id===id);
+  if (!c) return;
+  document.getElementById('client-modal-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:16px;background:var(--surface);border-radius:12px;">
+      <div class="av ${avColor(c.name)}" style="width:48px;height:48px;font-size:1.1rem;">${initials(c.name)}</div>
+      <div style="text-align:right;">
+        <div style="font-weight:900;font-size:1rem;color:var(--dark);">${c.name}</div>
+        <div style="font-size:0.8rem;color:var(--mid);">${c.email}</div>
+        <div style="font-size:0.8rem;color:var(--mid);">${c.city}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="padding:12px;background:var(--surface);border-radius:10px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:900;color:var(--primary);">${c.requests}</div>
+        <div style="font-size:0.72rem;color:var(--mid);">إجمالي الطلبات</div>
+      </div>
+      <div style="padding:12px;background:var(--surface);border-radius:10px;text-align:center;">
+        <span class="badge ${c.status==='active'?'badge-green':'badge-red'}" style="font-size:0.85rem;">${c.status==='active'?'نشط':'موقوف'}</span>
+        <div style="font-size:0.72rem;color:var(--mid);margin-top:4px;">الحالة</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:0.8rem;color:var(--mid);">انضم: ${c.joined}</div>`;
+  openModal('client-modal');
+}
+
+// ============================
+// ADD WORKER
+// ============================
+function addWorker() {
+  const name = document.getElementById('new-w-name').value.trim();
+  if (!name) { toast('⚠️ يرجى إدخال الاسم','var(--warning)'); return; }
+  const newW = {
+    id: Date.now(),
+    name,
+    spec: document.getElementById('new-w-spec').value,
+    city: document.getElementById('new-w-city').value,
+    rating: 0, reviews: 0,
+    plan: document.getElementById('new-w-plan').value,
+    status: 'pending',
+    joined: new Date().toISOString().split('T')[0],
+    phone: document.getElementById('new-w-phone').value
+  };
+  WORKERS.unshift(newW);
+  const pending = WORKERS.filter(w=>w.status==='pending').length;
+  document.getElementById('badge-workers').textContent = pending;
+  closeModal('add-worker-modal');
+  renders.workers();
+  toast(`✅ تم إضافة ${name}`);
+  document.getElementById('new-w-name').value='';
+  document.getElementById('new-w-phone').value='';
+}
+
+// ============================
+// GLOBAL SEARCH
+// ============================
+function globalSearch(q) {
+  if (!q) return;
+  // Just navigate to workers and search there as a demo
+}
+
+// ============================
+// INIT
+// ============================
+renders.dashboard();
+</script>
+</body>
+</html>
